@@ -4,6 +4,8 @@ from math import prod
 
 import numpy as np
 
+sys.setrecursionlimit(1000000)
+
 CONNECT_COUNT = 1000
 
 
@@ -72,8 +74,57 @@ def part1(input: str):
     return prod(len(c) for c in circuits[:3])
 
 
+class DSU:
+    def __init__(self, n):
+        self.parent = list(range(n))
+        self.size = [1] * n
+        self.components = n
+
+    def find(self, x):
+        while self.parent[x] != x:
+            self.parent[x] = self.parent[self.parent[x]]
+            x = self.parent[x]
+        return x
+
+    def union(self, a, b):
+        ra = self.find(a)
+        rb = self.find(b)
+        if ra == rb:
+            return False
+        if self.size[ra] < self.size[rb]:
+            ra, rb = rb, ra
+        self.parent[rb] = ra
+        self.size[ra] += self.size[rb]
+        self.components -= 1
+        return True
+
+    def __repr__(self):
+        return f"parent={self.parent}, size={self.size}, components={self.components}"
+
+
 def part2(input: str):
-    pass
+    points = []
+    for line in input.splitlines():
+        x, y, z = line.split(",")
+        points.append([int(x), int(y), int(z)])
+    points = np.array(points)
+    # d(a,b) = forall i,j : ||a_i - b_j||
+    distances = np.sqrt(
+        np.sum((points[:, None, ...] - points[None, ...]) ** 2, axis=-1)
+    )
+    distances = np.tril(distances)
+    distances[distances == 0] = float("inf")
+
+    indices = np.argsort(distances, axis=None)
+    rows, cols = np.unravel_index(indices, distances.shape)
+    pairs = list(zip(rows, cols))
+
+    n = len(points)
+    dsu = DSU(n)
+    for a, b in pairs:
+        dsu.union(a, b)
+        if dsu.components == 1:
+            return points[a][0] * points[b][0]
 
 
 def main():
