@@ -24,7 +24,26 @@ def part1(input: str):
 
 
 def part2(input: str):
-    pass
+    # do reverse cumulative max
+    total = 0
+    for line in input.splitlines():
+        batteries = [int(c) for c in line]
+        digits = []
+        last_digit_index = -1
+
+        for _ in range(12):
+            max_batt, max_index = 0, 0
+            for i in range(
+                last_digit_index + 1,
+                len(batteries) - (12 - len(digits)) + 1,
+            ):
+                if batteries[i] > max_batt:
+                    max_batt = batteries[i]
+                    max_index = i
+            digits.append(max_batt)
+            last_digit_index = max_index
+        total += sum(10**i * d for d, i in zip(digits, range(len(digits) - 1, -1, -1)))
+    return total
 
 
 def main():
